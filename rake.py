@@ -5,6 +5,7 @@ import os
 import time
 import PySimpleGUI as psg
 from datetime import datetime
+import random
 today =datetime.today()
 
 class Rake(BeautifulSoup):
@@ -34,10 +35,15 @@ class Rake(BeautifulSoup):
                 
     def gui(self):
         return "no gui yet"
-
-
+COLORS = (
+        'blue',
+        'green',
+        'yellow',
+    )
+fg = None
 with open('./art.txt', 'r') as HELP:
         HELP = HELP.read()
+        fg = random.choice(COLORS)
 HELP += f"""\nInformation Gathering Tool\nIbraheem Mobolaji Abdulsalam \xa9 {today.date().year}\n\n Usage:\n\t
             rake --url www.domain.tld --o raw|table\n\t
             rake --url www.domain.tld --o raw|table --save ./name.txt\n\n For more help options use --help or -h        
@@ -46,21 +52,15 @@ HELP += f"""\nInformation Gathering Tool\nIbraheem Mobolaji Abdulsalam \xa9 {tod
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.help_option("--help", "-h")
+@click.help_option("--help", "-h", help=click.secho(HELP, fg=fg))
 def cli():
     pass
 
-   
-@cli.command(name=" ")
-def main():
-    click.echo(HELP)
-
-@cli.command()
-@click.option('--url', "-u", multiple=True, required=True, help='The url of the domain. Alias -u')
-@click.option('--save', "-s", multiple=True, help='Where to save the file. default is text file. Alias -s')
+#@cli.command(name=None)
+@click.option('--url', "-u", required=True, help='The url of the domain. Alias -u')
+@click.option('--save', "-s", help='Where to save the file. default is text file. Alias -s')
 @click.option("--o", help="type of stout, options include raw, table. if not included, no stout for display")
 def gather(url, o, save=None):
-    """ This will start the program and gather all necessary infomation\n options:\n\t--show: 1. t - tabular display 2. s - Save to stdout """
     try:
         r = Rake(domain = url)
     except Exception:
@@ -83,8 +83,3 @@ def gather(url, o, save=None):
             case False:
                 click.echo("Invalid file path")
  
-
-if __name__=="__main__":
-    
-    cli()
-
