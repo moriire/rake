@@ -2,7 +2,7 @@
 ## Whois on command line
 Rake is a domain level information gathering tool
 
-[![N|Solid](./assets/rake_windows.PNG)]
+![N|Solid](./assets/rake_windows.PNG)
 
 ## Installation
 ### Windows
