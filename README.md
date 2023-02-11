@@ -1,5 +1,5 @@
 # Rake
-## Whois on command line
+## _Whois on command line_
 Rake is a domain level information gathering tool
 
 ![N|Solid](./assets/rake_windows.PNG)
@@ -19,5 +19,5 @@ python setup.py install
 ```
 ## Usage
 ```sh
-rake --url domain-name -o raw|table|json|csv|txt --save myfilename.ext
+rake run --url domain-name -o raw|table|json|csv|txt --save myfilename.ext
 ```
