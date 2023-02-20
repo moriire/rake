@@ -19,5 +19,5 @@ python setup.py install
 ```
 ## Usage
 ```sh
-rake run --url domain-name -o raw|table|json|csv|txt --save myfilename.ext
+rake start --url domain-name -o raw|table|json --save txt|json|csv myfilename.ext
 ```

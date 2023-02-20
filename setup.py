@@ -2,9 +2,9 @@ from setuptools import setup
 
 setup(
     name='rake',
-    author_name = "Ibraheem Mobolaji Abdulsalam",
+    author = "Ibraheem Mobolaji Abdulsalam",
     author_email = "ibmabdulsalam@gmail.com",
-    version='0.1.0',
+    version='0.1.1',
     py_modules=['rake'],
     install_requires=[
         'click',
@@ -15,6 +15,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
+            'start-rake = rake:index',
             'rake = rake:cli'
         ],
     },

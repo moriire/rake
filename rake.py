@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import click
 import os
 import time
-import PySimpleGUI as psg
+from PySimpleGUI import (Button, Text, Radio, Input, Submit, FolderBrowse, Window)
 from datetime import datetime
 import random
 import json
@@ -58,23 +58,79 @@ with open('./art.txt', 'r') as HELP:
         HELP = HELP.read()
         fg = random.choice(COLORS)
 HELP += f"""\nInformation Gathering Tool\nIbraheem Mobolaji Abdulsalam \xa9 {today.date().year}\n\n Usage:\n\t
-            rake run --url www.domain.tld --o raw|table\n\t
-            rake run --url www.domain.tld --o raw|table --save ./name.txt\n\n For more help options use --help or -h        
+            rake start --url www.domain.tld --o raw|table\n\t
+            rake start --url www.domain.tld --o raw|table --save ./name.txt\n\n For more help options use --help or -h        
             """
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.help_option("--help", "-h", help=click.secho(HELP, fg=fg))
 def cli():
     pass
 
-@cli.command(name = "run")
+@cli.command()
+def index():
+    return click.secho(HELP, fg=fg)
+
+@cli.command()
+def gui():
+    layout = [
+        [Text("Enter URL:")],
+        [Input(key="url", focus=True, tooltip="Enter URL")],
+        [FolderBrowse(key="folder"), Text("No directory selected", key="folder_out")],
+        [Text("Output:")],
+        [
+        Radio("Text", group_id="out", key="txt"),
+         Radio("CSV", group_id="out", key="csv"),
+         Radio("JSON", group_id="out", key="json"),
+         Radio("None", default=True, group_id="out", key="non")
+        ],
+        [Text("Filename:")],
+        [Input("", key="fp", enable_events=True)],
+        [Text("Idle", key="progress")],
+        [Submit("Start", key="start")]
+
+    ]
+    win = Window("Rake-Information gathering tool", layout)
+    while True:
+        evt, vals = win.Read(0)
+        dr = ""
+        filename =  ""
+        print(evt, vals)
+        if vals["json"]:
+            filename = f"{path}.json"
+        if vals['csv']:
+            filename = f"{path}.csv"
+        if vals['txt']:
+            filename = f"{path}.txt"
+        path = os.path.join(dr, filename)
+        vals["fp"] = path
+
+        if vals["folder"] != "":
+            dr = vals["folder"]
+            vals["folder_out"] = dr
+            path = os.path.join(dr, filename)
+            vals["fp"] = path
+        if evt == "start":
+            try:
+                r = Rake(domain = vals['url'])
+            except Exception:
+                return click.secho("Internet Error", fg="red")
+            else:
+                if vals["json"]:
+                    r.json(path)
+                if vals['csv']:
+                    r.csv(path)
+                if vals['txt']:
+                    r.txt(path)
+                if vals['non']:
+                    return r.info()
+
+@cli.command(name = "start")
 @click.option('--url', "-u", required=True, help='The url of the domain. Alias -u')
-@click.option('--save', "-s", help='Where to save the file. default is text file. Alias -s')
 @click.option("--o", help="type of stout, options include raw, table. if not included, no stout for display")
-@click.argument("fpath")
-def gather(url, o, save=None, fpath=None):
+@click.argument("fpath", required=False)
+def gather(url, o, fpath=None):
     try:
         r = Rake(domain = url)
     except Exception:
@@ -88,17 +144,19 @@ def gather(url, o, save=None, fpath=None):
             for (i, j) in r.info().items():
                 time.sleep(1)
                 click.echo(f"\t{i}: {j}")
-
-    if save:
-        if fpath && save == os.path.split(fpath)[1].split(".")[-1]:
-            dr = os.path.isfile(fpath)
-            match dr:
-                case "txt":
-                    click.echo(r.txt(loc=save))
-                case "json":
-                    click.echo(r.json(loc=save))
-                case "csv":
-                    click.echo(r.csv(loc=save))
-        else:
-            click.echo("Invalid output file name. Check your fpath and save", fg="red")
- 
+        case "csv":
+            if fpath is None:
+                click.secho("You need to set file path.\ntry:\nrake start --url domain.tld --o csv path/filename.txt", fg="red")
+            else:
+                r.csv(fpath)
+        case "json":
+            if fpath is None:
+                click.secho("You need to set file path.\ntry:\nrake start --url domain.tld --o json path/filename.json", fg="red")
+            else:
+                r.json(fpath)
+                click.echo()
+        case "txt":
+            if fpath is None:
+                click.secho("You need to set file path.\ntry:\nrake start --url domain.tld --o txt path/filename.txt", fg="red")
+            else:
+                r.txt(fpath)
