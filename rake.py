@@ -1,4 +1,4 @@
-import requests
+from urllib import request
 from bs4 import BeautifulSoup
 import click
 import os
@@ -12,12 +12,18 @@ today =datetime.today()
 
 class Rake(BeautifulSoup):
     def __init__(self, domain):
-        self.url = f"https://www.whois.com/whois/{domain}"
-        self.req = requests.get(self.url)
-        super(Rake, self).__init__(self.req.text, "html.parser")
+        #self.url = f"https://www.whois.com/whois/{domain}"
+        #self.req = request.urlopen(self.url)
+        with open(domain, "r") as req:
+            self.req = req.read()
+        #super(Rake, self).__init__(self.req.text, "html.parser")
+        super(Rake, self).__init__(self.req, "html.parser")
 
     def raw_data(self):
         return self.find("pre", attrs={"class": "df-raw", "id" :"registrarData"})
+
+    def find_data(self, ele):
+        return self.find_all(ele, attrs={})
 
     def content(self):
         return self.raw_data().contents[0].split("\n")
@@ -44,9 +50,49 @@ class Rake(BeautifulSoup):
             for (k, v) in self.info().items():
                 out.write(f"{k}, {v}\n")
             return True
+
+    def pages(self):
+        pages = []
+        for page in self.find_data("a"):
+            p = page.attrs.get("href")
+            if p != "#":
+                pages.append(page.getText())
+        return pages
                 
-    def gui(self):
-        return "no gui yet"
+    def media(self):
+        pages = []
+        all_media = self.find_data("img")+self.find_data("audio")+self.find_data("video")
+        for page in all_media:
+            p = page.attrs.get("src")
+            if p != "#" or p!="":
+                pages.append(page.getText())
+        return pages
+
+    def count(self, ele):
+        return len(self.find_data(ele))#.contents[0].split("\n")
+
+    def clone(self, fp="./index.html"):
+        with open(fp, "w") as cl:
+            return cl.write(self.req)
+
+    def assets(self):
+        (css, js) = {}, {}
+        all_media = self.find_data("img")+self.find_data("script")+self.find_data("style")
+        for n, page in enumerate(all_media):
+            (jv, st) = page.attrs.get("src"), page.attrs.get("href")
+            match (jv, st):
+                case (True, None):
+                    js[f"js_{n}"] = st
+                case (None, True):                        
+                    css[f"css_{n}"] = jv
+        return (css, js)
+    
+    def clone_with_assets(self, fp="./index.html"):
+        with open(fp, "w") as cl:
+            return cl.write(self.req)
+if __name__ == "__main__":
+    r = Rake("../buy_me_a_coffee/Desktop/acsolot/buy_me_a_coffee/templates/homepage.html")
+    print(r.assets())
 
 COLORS = (
         'blue',
