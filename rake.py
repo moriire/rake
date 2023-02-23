@@ -12,12 +12,14 @@ today =datetime.today()
 
 class Rake(BeautifulSoup):
     def __init__(self, domain):
-        #self.url = f"https://www.whois.com/whois/{domain}"
-        #self.req = request.urlopen(self.url)
+        self.url = f"https://www.whois.com/whois/{domain}"
+        self.req = request.urlopen(self.url)
+        """
         with open(domain, "r") as req:
             self.req = req.read()
-        #super(Rake, self).__init__(self.req.text, "html.parser")
-        super(Rake, self).__init__(self.req, "html.parser")
+        """
+        super(Rake, self).__init__(self.req.text, "html.parser")
+        #super(Rake, self).__init__(self.req, "html.parser")
 
     def raw_data(self):
         return self.find("pre", attrs={"class": "df-raw", "id" :"registrarData"})
@@ -90,10 +92,12 @@ class Rake(BeautifulSoup):
     def clone_with_assets(self, fp="./index.html"):
         with open(fp, "w") as cl:
             return cl.write(self.req)
+
+"""
 if __name__ == "__main__":
     r = Rake("../buy_me_a_coffee/Desktop/acsolot/buy_me_a_coffee/templates/homepage.html")
     print(r.assets())
-
+"""
 COLORS = (
         'blue',
         'green',
@@ -116,17 +120,46 @@ def cli():
 
 @cli.command()
 def index():
-    return click.secho(HELP, fg=fg)
+    click.secho(HELP, fg=fg)
+
+@cli.command()
+@click.option('--url', "-u", required=True, help='The url of the domain. Alias -u')
+@click.argument("fpath", required=False)
+def clone(url, fpath=None):
+    """
+    For cloning web page.
+    Usage:
+        rake clone --url www.domain.tld
+        rake clone -u www.domain.tld
+    """
+    try:
+        r = Rake(domain = url)
+    except Exception:
+        return click.echo("Internet Error")
+    else:
+        return r.clone(fpath)
 
 @cli.command()
 def gui():
+    """
+    GUI mode for all operations. The output can also be exported into various file formats.
+    Usage:
+        rake gui - Wait for a gui window to popup
+    """
     layout = [
         [Text("Enter URL:")],
         [Input(key="url", focus=True, tooltip="Enter URL")],
         [FolderBrowse(key="folder"), Text("No directory selected", key="folder_out")],
+        [Text("Operations:")],
+        [
+         Radio("Information", group_id="out", key="info"),
+         Radio("Clone", group_id="out", key="clone"),
+         Radio("Stats", group_id="out", key="stats"),
+         Radio("None", default=True, group_id="out", key="non")
+        ],
         [Text("Output:")],
         [
-        Radio("Text", group_id="out", key="txt"),
+         Radio("Text", group_id="out", key="txt"),
          Radio("CSV", group_id="out", key="csv"),
          Radio("JSON", group_id="out", key="json"),
          Radio("None", default=True, group_id="out", key="non")
@@ -177,10 +210,13 @@ def gui():
 @click.option("--o", help="type of stout, options include raw, table. if not included, no stout for display")
 @click.argument("fpath", required=False)
 def gather(url, o, fpath=None):
+    r"""
+    This is another whois on command line.\nEvery information regarding a domain will be retrieved and can also be exported
+    """
     try:
         r = Rake(domain = url)
     except Exception:
-        click.echo("Internet Error")
+        return click.echo("Internet Error")
     match o:
         case None:
             click.echo("processed with no output")
@@ -206,3 +242,7 @@ def gather(url, o, fpath=None):
                 click.secho("You need to set file path.\ntry:\nrake start --url domain.tld --o txt path/filename.txt", fg="red")
             else:
                 r.txt(fpath)
+
+
+
+    

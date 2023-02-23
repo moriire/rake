@@ -18,6 +18,28 @@ cd rake
 python setup.py install
 ```
 ## Usage
+#### Commands
+--- Start
+--- gui
+--- clone
+--- stats
+
+### To get detail infomation about a specific url
 ```sh
 rake start --url domain-name -o raw|table|json --save txt|json|csv myfilename.ext
+```
+### OR
+
+### GUI option
+```sh
+rake gui
+```
+### To clone a specific url
+```sh
+rake clone --url domain-name  myfilename.ext
+```
+
+### To get a full stat of specific url
+```sh
+rake stats --url domain-name  myfilename.ext
 ```

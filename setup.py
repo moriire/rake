@@ -4,7 +4,7 @@ setup(
     name='rake',
     author = "Ibraheem Mobolaji Abdulsalam",
     author_email = "ibmabdulsalam@gmail.com",
-    version='0.1.0',
+    version='0.1.5',
     py_modules=['rake'],
     install_requires=[
         'click',
