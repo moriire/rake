@@ -1,4 +1,4 @@
-from urllib import request
+import requests
 from bs4 import BeautifulSoup
 import click
 import os
@@ -13,7 +13,10 @@ today =datetime.today()
 class Rake(BeautifulSoup):
     def __init__(self, domain):
         self.url = f"https://www.whois.com/whois/{domain}"
-        self.req = request.urlopen(self.url)
+        try:
+            self.req = requests.get(self.url)
+        except:
+             return click.secho("Network connection error", fg="red")
         """
         with open(domain, "r") as req:
             self.req = req.read()
@@ -38,7 +41,8 @@ class Rake(BeautifulSoup):
         return table
 
     def json(self, fp):
-        return json.dump(self.info, fp)
+        with open(fp, "w") as out:
+            return json.dump(self.info(), out)
 
     def txt(self, fp):
         with open(fp, "a") as out:
@@ -47,7 +51,7 @@ class Rake(BeautifulSoup):
             return True 
 
     def csv(self, fp):
-        with open(loc, "a") as out:
+        with open(fp, "a") as out:
             out.write("Data, Detail")
             for (k, v) in self.info().items():
                 out.write(f"{k}, {v}\n")
@@ -75,7 +79,7 @@ class Rake(BeautifulSoup):
 
     def clone(self, fp="./index.html"):
         with open(fp, "w") as cl:
-            return cl.write(self.req)
+            return cl.write(self.req.text)
 
     def assets(self):
         (css, js) = {}, {}
@@ -108,8 +112,14 @@ with open('./art.txt', 'r') as HELP:
         HELP = HELP.read()
         fg = random.choice(COLORS)
 HELP += f"""\nInformation Gathering Tool\nIbraheem Mobolaji Abdulsalam \xa9 {today.date().year}\n\n Usage:\n\t
-            rake start --url www.domain.tld --o raw|table\n\t
-            rake start --url www.domain.tld --o raw|table --save ./name.txt\n\n For more help options use --help or -h        
+            rake info --url www.domain.tld
+            rake info --url www.domain.tld --o raw|table\n\t
+            rake info --url www.domain.tld --o raw|table ./name.txt\n\n For more help options use --help or -h        
+            
+            rake cloner  --url www.doamin.tld 
+            rake cloner --url www.domain.tld ./web/about.html
+
+            rake gui
             """
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -122,7 +132,7 @@ def cli():
 def index():
     click.secho(HELP, fg=fg)
 
-@cli.command()
+@cli.command(name="cloner")
 @click.option('--url', "-u", required=True, help='The url of the domain. Alias -u')
 @click.argument("fpath", required=False)
 def clone(url, fpath=None):
@@ -132,12 +142,13 @@ def clone(url, fpath=None):
         rake clone --url www.domain.tld
         rake clone -u www.domain.tld
     """
-    try:
-        r = Rake(domain = url)
-    except Exception:
-        return click.echo("Internet Error")
+    r = Rake(domain = url)
+    if fpath:
+        click.secho(f"Cloning page into {fpath}", fg="green")
+        return r.clone(fp=fpath)
     else:
-        return r.clone(fpath)
+        return r.clone()
+
 
 @cli.command()
 def gui():
@@ -205,44 +216,50 @@ def gui():
                 if vals['non']:
                     return r.info()
 
-@cli.command(name = "start")
+@cli.command(name = "info")
 @click.option('--url', "-u", required=True, help='The url of the domain. Alias -u')
 @click.option("--o", help="type of stout, options include raw, table. if not included, no stout for display")
 @click.argument("fpath", required=False)
 def gather(url, o, fpath=None):
     r"""
-    This is another whois on command line.\nEvery information regarding a domain will be retrieved and can also be exported
+    This is another whois on command line.\nEvery information regarding a domain will be retrieved and can also be exported into supported file types
     """
-    try:
-        r = Rake(domain = url)
-    except Exception:
-        return click.echo("Internet Error")
+    r = Rake(domain = url)
+    if fpath:
+        ext = fpath.rpartition(".")[0]
+
+        match ext:
+            case "csv":
+                click.echo(f"gathering {r.domain}...")
+                r.csv(fpath)
+                return click.secho(f"Saving file in {fpath}", fg="blue")
+            case "json":
+                click.echo(f"gathering {r.domain}...")
+                r.json(fpath)
+                return click.echo(f"Saved file to {fpath}")
+            case "txt":
+                r.txt(fpath)
+            case _:
+                return click.secho(f"{ext} File type is not supported")
+    else:
+        return click.secho("try: rake -h or rake --help")
+
     match o:
         case None:
-            click.echo("processed with no output")
+            click.echo("defaulting to table")
+            click.echo(r.info())
         case "raw":
+            click.echo(f"gathering {r.domain}...")
             click.echo(r.info())
         case "table":
+            click.echo(f"gathering {r.domain}...")
             for (i, j) in r.info().items():
                 time.sleep(1)
                 click.echo(f"\t{i}: {j}")
-        case "csv":
-            if fpath is None:
-                click.secho("You need to set file path.\ntry:\nrake start --url domain.tld --o csv path/filename.txt", fg="red")
-            else:
-                r.csv(fpath)
-        case "json":
-            if fpath is None:
-                click.secho("You need to set file path.\ntry:\nrake start --url domain.tld --o json path/filename.json", fg="red")
-            else:
-                r.json(fpath)
-                click.echo()
-        case "txt":
-            if fpath is None:
-                click.secho("You need to set file path.\ntry:\nrake start --url domain.tld --o txt path/filename.txt", fg="red")
-            else:
-                r.txt(fpath)
-
+        case _:
+            return click.secho("Something went wrong")
+        
+        
 
 
     
