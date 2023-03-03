@@ -19,9 +19,10 @@ python setup.py install
 ```
 ## Usage
 #### Commands
---- info - Domain name information
---- gui - Rake gui interface
---- cloner - Website cloner
+- info - Domain name information
+- gui - Rake gui interface
+- cloner - Website cloner
+
 ```sh
 rake info --url www.domain.tld
 rake info --url www.domain.tld --o raw|table\n\t
@@ -48,3 +49,4 @@ rake gui
 ```sh
 rake clone --url domain-name  myfilename.ext
 ```
+if filepath is ommited, the page will be saved to index.html
