@@ -19,14 +19,24 @@ python setup.py install
 ```
 ## Usage
 #### Commands
---- Start
---- gui
---- clone
---- stats
-
-### To get detail infomation about a specific url
+--- info - Domain name information
+--- gui - Rake gui interface
+--- cloner - Website cloner
 ```sh
-rake start --url domain-name -o raw|table|json --save txt|json|csv myfilename.ext
+rake info --url www.domain.tld
+rake info --url www.domain.tld --o raw|table\n\t
+rake info --url www.domain.tld --o raw|table ./name.txt      
+            
+rake cloner  --url www.doamin.tld 
+rake cloner --url www.domain.tld ./web/about.html
+
+rake gui
+ ```
+
+### To get detail infomation about a specific domain name
+```sh
+rake info --url domain-name -o raw|table   myfilename.ext
+supported ext - txt, csv, json
 ```
 ### OR
 
@@ -37,9 +47,4 @@ rake gui
 ### To clone a specific url
 ```sh
 rake clone --url domain-name  myfilename.ext
-```
-
-### To get a full stat of specific url
-```sh
-rake stats --url domain-name  myfilename.ext
 ```
